@@ -69,7 +69,7 @@ export function AdminSidebar() {
           <DropdownMenuTrigger asChild>
             <button className="w-full flex items-center justify-between p-2 rounded-md hover:bg-white/5 transition-colors">
               <div className="flex items-center gap-3">
-                <Avatar className="h-9 w-9"><AvatarImage src="https://github.com/shadcn.png" alt="Admin Avatar" /><AvatarFallback>AD</AvatarFallback></Avatar>
+                <Avatar className="h-9 w-9"><AvatarFallback>AD</AvatarFallback></Avatar>
                 <div><p className="font-semibold text-sm text-left">Admin User</p><p className="text-xs text-white/60">Administrator</p></div>
               </div>
               <ChevronUp className="h-4 w-4 text-white/60" />

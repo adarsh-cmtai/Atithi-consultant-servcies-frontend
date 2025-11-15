@@ -98,7 +98,7 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
                 <div className="p-4 mt-auto border-t border-white/10">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <Avatar className="h-9 w-9"><AvatarImage src="https://github.com/shadcn.png" alt="Admin Avatar" /><AvatarFallback>AD</AvatarFallback></Avatar>
+                      {/* <Avatar className="h-9 w-9"><AvatarFallback>AD</AvatarFallback></Avatar> */}
                       <div><p className="font-semibold text-sm">{user.fullName}</p><p className="text-xs text-white/60">Administrator</p></div>
                     </div>
                     <Button variant="ghost" size="icon" onClick={handleLogout} className="h-8 w-8 text-white/60 hover:bg-white/10 hover:text-white"><LogOut className="h-4 w-4" /></Button>
