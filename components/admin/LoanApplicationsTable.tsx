@@ -2,26 +2,27 @@
 
 import * as React from "react"
 import {
-  ColumnDef, ColumnFiltersState, SortingState, VisibilityState, flexRender, getCoreRowModel, getPaginationRowModel, getSortedRowModel, getFilteredRowModel, useReactTable, PaginationState,
+  ColumnDef,
+  SortingState,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+  PaginationState,
 } from "@tanstack/react-table"
 import { useAppDispatch, useAppSelector, RootState } from "@/lib/store"
 import { fetchLoanApplications, LoanApplication, clearDetailedApplication } from "@/lib/features/admin/adminSlice"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { AdminApplicationDetailsView } from "./AdminApplicationDetailsView"
 import { ArrowUpDown, MoreHorizontal, FileDown, Loader2 } from "lucide-react"
-import { cn } from "@/lib/utils"
 import { useToast } from "@/components/ui/use-toast"
 import apiClient from "@/lib/api"
 import { exportToExcel } from "@/lib/excel.utils"
-
-const statusColors: Record<string, string> = { Pending: "bg-yellow-100 text-yellow-800", "In Review": "bg-blue-100 text-blue-800", Approved: "bg-green-100 text-green-800", Rejected: "bg-red-100 text-red-800" }
 
 export function LoanApplicationsTable() {
   const dispatch = useAppDispatch()
@@ -36,7 +37,6 @@ export function LoanApplicationsTable() {
     { accessorKey: "loanAmount", header: "Loan Amount", cell: ({ row }) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(row.getValue("loanAmount")) },
     { accessorKey: "loanPurpose", header: "Purpose" },
     { accessorKey: "submissionDate", header: "Submission Date", cell: ({ row }) => new Date(row.getValue("submissionDate")).toLocaleDateString() },
-    { accessorKey: "status", header: "Status", cell: ({ row }) => <Badge variant="outline" className={cn(statusColors[row.getValue("status") as string])}>{row.getValue("status")}</Badge> },
     { id: "actions", cell: ({ row }) => (
       <DropdownMenu>
         <DropdownMenuTrigger asChild><Button variant="ghost" className="h-8 w-8 p-0"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>

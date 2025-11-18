@@ -5,13 +5,13 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAppSelector } from "@/lib/store"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { DatePicker } from "@/components/ui/datepicker"
 import Navbar from "@/components/navbar"
 import Footer from "@/components/footer"
@@ -72,7 +72,36 @@ export default function JobFormPage() {
   const handleCheckboxChange = (name: string, checked: boolean) => setFormData((prev) => ({ ...prev, [name]: checked }))
   const handleRadioChange = (name: string, value: string) => setFormData((prev) => ({ ...prev, [name]: value }))
 
-  const nextStep = () => currentStep < steps.length && setCurrentStep(currentStep + 1)
+  const validateStep = (step: number) => {
+    const requiredFields: { [key: number]: (keyof typeof initialFormData)[] } = {
+        1: ["fullName", "dob", "address", "city", "state", "zip", "phone", "email"],
+        2: ["position", "expectedSalary", "experience", "currentLocation", "preferLocation"],
+    };
+    
+    const fieldsToValidate = requiredFields[step];
+    if (!fieldsToValidate) return true;
+
+    for (const field of fieldsToValidate) {
+      if (!formData[field]) {
+        toast({
+          title: "Missing Information",
+          description: `Please fill out all required fields in this step.`,
+          variant: "destructive",
+        });
+        return false;
+      }
+    }
+    return true;
+  }
+
+  const nextStep = () => {
+    if (validateStep(currentStep)) {
+      if (currentStep < steps.length) {
+        setCurrentStep(currentStep + 1);
+      }
+    }
+  }
+
   const prevStep = () => currentStep > 1 && setCurrentStep(currentStep - 1)
   
   const handleSubmit = async (paymentData: any) => {
@@ -81,7 +110,7 @@ export default function JobFormPage() {
       await apiClient.post("/applications/job", { ...formData, paymentDetails: paymentData });
       toast({ title: "Application Submitted!", description: "We have received your job application." });
       localStorage.removeItem(CACHE_KEY);
-      router.push("/customer/applications");
+      router.push("/thank-you");
     } catch (error: any) {
       toast({ title: "Submission Failed", description: error.response?.data?.message || "An error occurred.", variant: "destructive" });
     } finally {
@@ -98,18 +127,17 @@ export default function JobFormPage() {
     
     setIsSubmitting(true);
     try {
-      const { data: response } = await apiClient.post("/payments/create-session");
-      console.log("Payment session response:", response);
-      
+      const paymentPayload = user ? {} : {
+        fullName: formData.fullName,
+        email: formData.email,
+        phone: formData.phone
+      };
+
+      const { data: response } = await apiClient.post("/payments/create-session", paymentPayload);
       const { payment_session_id, order_id } = response.data;
       
-      if (!payment_session_id) {
-        throw new Error("Payment session ID not received");
-      }
-
-      if (typeof window.Cashfree === "undefined") {
-        throw new Error("Cashfree SDK not loaded");
-      }
+      if (!payment_session_id) throw new Error("Payment session ID not received");
+      if (typeof window.Cashfree === "undefined") throw new Error("Cashfree SDK not loaded");
 
       const cashfree = window.Cashfree({
         mode: process.env.NEXT_PUBLIC_CASHFREE_ENV === "PRODUCTION" ? "production" : "sandbox"
@@ -122,40 +150,19 @@ export default function JobFormPage() {
 
       cashfree.checkout(checkoutOptions).then((result: any) => {
         if (result.error) {
-          toast({ 
-            title: "Payment Failed", 
-            description: result.error.message || "Payment could not be processed", 
-            variant: "destructive" 
-          });
+          toast({ title: "Payment Failed", description: result.error.message || "Payment could not be processed", variant: "destructive" });
           setIsSubmitting(false);
         } else if (result.paymentDetails) {
-          toast({ 
-            title: "Payment Successful!", 
-            description: "Submitting your application..." 
-          });
-          handleSubmit({
-            order_id: order_id,
-            payment_status: "SUCCESS",
-            payment_details: result.paymentDetails
-          });
+          toast({ title: "Payment Successful!", description: "Submitting your application..." });
+          handleSubmit({ order_id: order_id, payment_status: "SUCCESS", payment_details: result.paymentDetails });
         }
       }).catch((error: any) => {
-        console.error("Checkout error:", error);
-        toast({ 
-          title: "Payment Error", 
-          description: "Something went wrong with the payment", 
-          variant: "destructive" 
-        });
+        toast({ title: "Payment Error", description: "Something went wrong with the payment", variant: "destructive" });
         setIsSubmitting(false);
       });
 
     } catch (error: any) {
-      console.error("Payment initiation error:", error);
-      toast({ 
-        title: "Payment Error", 
-        description: error.response?.data?.message || error.message || "Could not initiate payment.", 
-        variant: "destructive" 
-      });
+      toast({ title: "Payment Error", description: error.response?.data?.message || error.message || "Could not initiate payment.", variant: "destructive" });
       setIsSubmitting(false);
     }
   };

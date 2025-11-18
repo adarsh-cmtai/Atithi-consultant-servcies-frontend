@@ -1,13 +1,10 @@
 "use client"
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useAppDispatch, useAppSelector, RootState } from "@/lib/store";
-import { fetchApplicationDetailsForAdmin, updateApplicationStatus } from "@/lib/features/admin/adminSlice";
+import { fetchApplicationDetailsForAdmin } from "@/lib/features/admin/adminSlice";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
 
 const DetailItem = ({ label, value }: { label: string; value: any }) => (
   <div>
@@ -15,45 +12,6 @@ const DetailItem = ({ label, value }: { label: string; value: any }) => (
     <p className="text-base text-foreground">{value || "N/A"}</p>
   </div>
 );
-
-const StatusUpdater = ({ application, type }: { application: any, type: 'job' | 'loan' }) => {
-    const [status, setStatus] = useState(application.status);
-    const [isUpdating, setIsUpdating] = useState(false);
-    const dispatch = useAppDispatch();
-    const { toast } = useToast();
-
-    const handleUpdate = async () => {
-        setIsUpdating(true);
-        try {
-            await dispatch(updateApplicationStatus({ type, id: application._id, status })).unwrap();
-            toast({ title: "Success", description: "Application status has been updated." });
-        } catch (error: any) {
-            toast({ title: "Error", description: error || "Failed to update status.", variant: "destructive"});
-        } finally {
-            setIsUpdating(false);
-        }
-    };
-
-    return (
-        <Card>
-            <CardHeader><CardTitle>Update Status</CardTitle></CardHeader>
-            <CardContent className="flex items-center gap-4">
-                <Select value={status} onValueChange={setStatus}>
-                    <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="Pending">Pending</SelectItem>
-                        <SelectItem value="In Review">In Review</SelectItem>
-                        <SelectItem value="Approved">Approved</SelectItem>
-                        <SelectItem value="Rejected">Rejected</SelectItem>
-                    </SelectContent>
-                </Select>
-                <Button onClick={handleUpdate} disabled={isUpdating || status === application.status}>
-                    {isUpdating ? "Saving..." : "Save"}
-                </Button>
-            </CardContent>
-        </Card>
-    );
-};
 
 export function AdminApplicationDetailsView({ appId, type }: { appId: string, type: 'job' | 'loan' }) {
   const dispatch = useAppDispatch();
@@ -71,8 +29,6 @@ export function AdminApplicationDetailsView({ appId, type }: { appId: string, ty
 
   return (
     <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-4">
-        <StatusUpdater application={detailedApplication} type={type} />
-
         {type === 'job' ? (
             <>
                 <Card><CardHeader><CardTitle>Personal Information</CardTitle></CardHeader><CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -11,7 +11,7 @@ const navLinks = [
   { href: "/customer", label: "Dashboard", icon: LayoutDashboard },
   { href: "/customer/applications", label: "My Applications", icon: FileText },
   { href: "/customer/profile", label: "My Profile", icon: User },
-  { href: "/customer/notifications", label: "Notifications", icon: Bell },
+  // { href: "/customer/notifications", label: "Notifications", icon: Bell },
 ]
 
 interface CustomerSidebarProps {

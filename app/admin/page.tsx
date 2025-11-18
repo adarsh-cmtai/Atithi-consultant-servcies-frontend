@@ -89,7 +89,7 @@ export default function AdminDashboardPage() {
       </div>
 
       <div className="grid gap-8 md:grid-cols-1 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
+        {/* <Card className="lg:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between">
             <div><CardTitle>Recent Applications</CardTitle><CardDescription>The latest 5 applications submitted across all categories.</CardDescription></div>
             <Link href="/admin/job-applications"><Button variant="outline" size="sm">View All</Button></Link>
@@ -110,7 +110,7 @@ export default function AdminDashboardPage() {
               </TableBody>
             </Table>
           </CardContent>
-        </Card>
+        </Card> */}
 
         <Card>
           <CardHeader><CardTitle>Status Breakdown</CardTitle><CardDescription>A summary of all application statuses.</CardDescription></CardHeader>

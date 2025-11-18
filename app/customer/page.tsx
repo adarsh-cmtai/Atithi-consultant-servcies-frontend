@@ -117,7 +117,7 @@ export default function CustomerDashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2">
+        {/* <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>Recent Activity</CardTitle>
             <CardDescription>A log of your recent application and profile updates.</CardDescription>
@@ -149,9 +149,9 @@ export default function CustomerDashboardPage() {
               </Button>
             </Link>
           </CardFooter>
-        </Card>
+        </Card> */}
 
-        <div className="space-y-6">
+        {/* <div className="space-y-6">
           {quickActions.map((action, idx) => (
             <Link href={action.href} key={idx}>
               <Card className="group h-full hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
@@ -170,7 +170,7 @@ export default function CustomerDashboardPage() {
               </Card>
             </Link>
           ))}
-        </div>
+        </div> */}
       </div>
     </div>
   )

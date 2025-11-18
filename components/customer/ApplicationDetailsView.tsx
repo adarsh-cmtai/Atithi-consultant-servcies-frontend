@@ -95,11 +95,11 @@ export function ApplicationDetailsView({ application }: { application: Applicati
                 </CardContent></Card>
              </>
         )}
-        <Card><CardHeader><CardTitle>Payment Information</CardTitle></CardHeader><CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* <Card><CardHeader><CardTitle>Payment Information</CardTitle></CardHeader><CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <DetailItem label="Payment ID" value={detailedApplication.paymentDetails?.paymentId} />
             <DetailItem label="Order ID" value={detailedApplication.paymentDetails?.orderId} />
             <DetailItem label="Amount Paid" value={new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(detailedApplication.paymentDetails?.amount || 0)} />
-        </CardContent></Card>
+        </CardContent></Card> */}
     </div>
   );
 }

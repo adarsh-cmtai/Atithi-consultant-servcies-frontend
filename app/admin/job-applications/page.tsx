@@ -11,10 +11,6 @@ export default function AdminJobApplicationsPage() {
           <h1 className="text-3xl font-bold text-foreground">Job Applications Management</h1>
           <p className="text-muted-foreground">View, manage, and filter all job applications.</p>
         </div>
-        {/* <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Add New Application
-        </Button> */}
       </div>
       
       <JobApplicationsTable />

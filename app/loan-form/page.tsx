@@ -1,3 +1,5 @@
+// --- START OF FILE app/(public)/loan-form/page.tsx ---
+
 "use client"
 
 import type React from "react"
@@ -5,7 +7,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAppSelector } from "@/lib/store"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -14,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DatePicker } from "@/components/ui/datepicker"
 import Navbar from "@/components/navbar"
 import Footer from "@/components/footer"
-import { User, Home, Briefcase, FileCheck, Check, ArrowRight, Loader2, IndianRupee } from "lucide-react"
+import { User, Home, Briefcase, FileCheck, Check, ArrowRight, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useToast } from "@/components/ui/use-toast"
 import apiClient from "@/lib/api"
@@ -63,25 +65,52 @@ export default function LoanFormPage() {
     localStorage.setItem(CACHE_KEY, JSON.stringify(formData));
   }, [formData]);
 
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }))
   const handleSelectChange = (name: string, value: string) => setFormData((prev) => ({ ...prev, [name]: value }))
   const handleDateChange = (name: string, date?: Date) => setFormData((prev) => ({ ...prev, [name]: date }))
   const handleCheckboxChange = (name: string, checked: boolean) => setFormData((prev) => ({ ...prev, [name]: checked }))
 
-  const nextStep = () => currentStep < steps.length && setCurrentStep(currentStep + 1)
+  const validateStep = (step: number) => {
+    const requiredFields: { [key: number]: (keyof typeof initialFormData)[] } = {
+        1: ["fullName", "pan", "dob"],
+        2: ["contact", "email", "address", "city", "postalCode"],
+        3: ["position", "monthlyIncome"],
+        4: ["loanAmount", "loanPurpose", "nomineeName", "nomineeContact", "nomineeAadhaar"]
+    };
+
+    const fieldsToValidate = requiredFields[step];
+    if (!fieldsToValidate) return true;
+
+    for (const field of fieldsToValidate) {
+      if (!formData[field]) {
+        toast({
+          title: "Missing Information",
+          description: `Please fill out all required fields in this step.`,
+          variant: "destructive",
+        });
+        return false;
+      }
+    }
+    return true;
+  }
+
+  const nextStep = () => {
+    if (validateStep(currentStep)) {
+        if (currentStep < steps.length) {
+            setCurrentStep(currentStep + 1);
+        }
+    }
+  }
+
   const prevStep = () => currentStep > 1 && setCurrentStep(currentStep - 1)
 
   const handleSubmit = async (paymentData: any) => {
     setIsSubmitting(true);
     try {
-      await apiClient.post("/applications/loan", {
-        ...formData,
-        paymentDetails: paymentData
-      });
+      await apiClient.post("/applications/loan", { ...formData, paymentDetails: paymentData });
       toast({ title: "Application Submitted!", description: "We have received your loan application." });
       localStorage.removeItem(CACHE_KEY);
-      router.push("/customer/applications");
+      router.push("/thank-you");
     } catch (error: any) {
       toast({ title: "Submission Failed", description: error.response?.data?.message || "An error occurred.", variant: "destructive" });
     } finally {
@@ -89,80 +118,54 @@ export default function LoanFormPage() {
     }
   }
 
-const handlePayment = async (e: React.FormEvent) => {
-  e.preventDefault();
-  if (!formData.declaration) {
-    toast({ 
-      title: "Declaration Required", 
-      description: "You must agree to the declaration before proceeding.", 
-      variant: "destructive" 
-    });
-    return;
-  }
-
-  setIsSubmitting(true);
-  try {
-    const { data: response } = await apiClient.post("/payments/create-session");
-    console.log("Payment session response:", response);
-    
-    const { payment_session_id, order_id } = response.data;
-    
-    if (!payment_session_id) {
-      throw new Error("Payment session ID not received");
+  const handlePayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.declaration) {
+      toast({ title: "Declaration Required", description: "You must agree to the declaration before proceeding.", variant: "destructive" });
+      return;
     }
 
-    if (typeof window.Cashfree === "undefined") {
-      throw new Error("Cashfree SDK not loaded");
-    }
+    setIsSubmitting(true);
+    try {
+      const paymentPayload = user ? {} : {
+        fullName: formData.fullName,
+        email: formData.email,
+        phone: formData.contact
+      };
 
-    const cashfree = window.Cashfree({
-      mode: process.env.NEXT_PUBLIC_CASHFREE_ENV === "PRODUCTION" ? "production" : "sandbox"
-    });
-    
-    const checkoutOptions = {
-      paymentSessionId: payment_session_id,
-      redirectTarget: "_modal"
-    };
+      const { data: response } = await apiClient.post("/payments/create-session", paymentPayload);
+      const { payment_session_id, order_id } = response.data;
+      
+      if (!payment_session_id) throw new Error("Payment session ID not received");
+      if (typeof window.Cashfree === "undefined") throw new Error("Cashfree SDK not loaded");
 
-    cashfree.checkout(checkoutOptions).then((result: any) => {
-      if (result.error) {
-        toast({ 
-          title: "Payment Failed", 
-          description: result.error.message || "Payment could not be processed", 
-          variant: "destructive" 
-        });
-        setIsSubmitting(false);
-      } else if (result.paymentDetails) {
-        toast({ 
-          title: "Payment Successful!", 
-          description: "Submitting your application..." 
-        });
-        handleSubmit({
-          order_id: order_id,
-          payment_status: "SUCCESS",
-          payment_details: result.paymentDetails
-        });
-      }
-    }).catch((error: any) => {
-      console.error("Checkout error:", error);
-      toast({ 
-        title: "Payment Error", 
-        description: "Something went wrong with the payment", 
-        variant: "destructive" 
+      const cashfree = window.Cashfree({
+        mode: process.env.NEXT_PUBLIC_CASHFREE_ENV === "PRODUCTION" ? "production" : "sandbox"
       });
-      setIsSubmitting(false);
-    });
+      
+      const checkoutOptions = {
+        paymentSessionId: payment_session_id,
+        redirectTarget: "_modal"
+      };
 
-  } catch (error: any) {
-    console.error("Payment initiation error:", error);
-    toast({ 
-      title: "Payment Error", 
-      description: error.response?.data?.message || error.message || "Could not initiate payment.", 
-      variant: "destructive" 
-    });
-    setIsSubmitting(false);
-  }
-};
+      cashfree.checkout(checkoutOptions).then((result: any) => {
+        if (result.error) {
+          toast({ title: "Payment Failed", description: result.error.message || "Payment could not be processed", variant: "destructive" });
+          setIsSubmitting(false);
+        } else if (result.paymentDetails) {
+          toast({ title: "Payment Successful!", description: "Submitting your application..." });
+          handleSubmit({ order_id: order_id, payment_status: "SUCCESS", payment_details: result.paymentDetails });
+        }
+      }).catch((error: any) => {
+        toast({ title: "Payment Error", description: "Something went wrong with the payment", variant: "destructive" });
+        setIsSubmitting(false);
+      });
+
+    } catch (error: any) {
+      toast({ title: "Payment Error", description: error.response?.data?.message || error.message || "Could not initiate payment.", variant: "destructive" });
+      setIsSubmitting(false);
+    }
+  };
 
   const StepIcon = steps[currentStep - 1].icon;
 
