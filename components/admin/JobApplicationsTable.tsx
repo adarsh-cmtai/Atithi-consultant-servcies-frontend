@@ -1,32 +1,39 @@
 "use client"
 
-import * as React from "react";
-import { ColumnDef, ColumnFiltersState, SortingState, VisibilityState, flexRender, getCoreRowModel, getPaginationRowModel, getSortedRowModel, getFilteredRowModel, useReactTable, PaginationState } from "@tanstack/react-table";
-import { useAppDispatch, useAppSelector, RootState } from "@/lib/store";
-import { fetchJobApplications, JobApplication, clearDetailedApplication } from "@/lib/features/admin/adminSlice";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { AdminApplicationDetailsView } from "./AdminApplicationDetailsView";
-import { ArrowUpDown, MoreHorizontal, ChevronDown } from "lucide-react";
-import { cn } from "@/lib/utils";
+import * as React from "react"
+import {
+  ColumnDef, ColumnFiltersState, SortingState, VisibilityState, flexRender, getCoreRowModel, getPaginationRowModel, getSortedRowModel, getFilteredRowModel, useReactTable, PaginationState,
+} from "@tanstack/react-table"
+import { useAppDispatch, useAppSelector, RootState } from "@/lib/store"
+import { fetchJobApplications, JobApplication, clearDetailedApplication } from "@/lib/features/admin/adminSlice"
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { AdminApplicationDetailsView } from "./AdminApplicationDetailsView"
+import { ArrowUpDown, MoreHorizontal, ChevronDown, FileDown, Loader2 } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { useToast } from "@/components/ui/use-toast"
+import apiClient from "@/lib/api"
+import { exportToExcel } from "@/lib/excel.utils"
 
 const statusColors: Record<string, string> = {
   Pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
   "In Review": "bg-blue-100 text-blue-800 border-blue-200",
   Approved: "bg-green-100 text-green-800 border-green-200",
   Rejected: "bg-red-100 text-red-800 border-red-200",
-};
+}
 
 export function JobApplicationsTable() {
-  const dispatch = useAppDispatch();
-  const { jobApplications, jobPagination, jobApplicationsStatus } = useAppSelector((state: RootState) => state.admin);
-  const [selectedApp, setSelectedApp] = React.useState<JobApplication | null>(null);
+  const dispatch = useAppDispatch()
+  const { jobApplications, jobPagination, jobApplicationsStatus } = useAppSelector((state: RootState) => state.admin)
+  const [selectedApp, setSelectedApp] = React.useState<JobApplication | null>(null)
+  const [isExporting, setIsExporting] = React.useState(false)
+  const { toast } = useToast()
 
   const columns = React.useMemo<ColumnDef<JobApplication>[]>(() => [
     { id: "select", header: ({ table }) => (<Checkbox checked={table.getIsAllPageRowsSelected()} onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)} aria-label="Select all" />), cell: ({ row }) => (<Checkbox checked={row.getIsSelected()} onCheckedChange={(value) => row.toggleSelected(!!value)} aria-label="Select row" />), enableSorting: false, enableHiding: false },
@@ -40,99 +47,81 @@ export function JobApplicationsTable() {
         <DropdownMenuTrigger asChild><Button variant="ghost" className="h-8 w-8 p-0"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          <DialogTrigger asChild>
-            <DropdownMenuItem onSelect={() => setSelectedApp(row.original)}>View Details</DropdownMenuItem>
-          </DialogTrigger>
-          {/* <DropdownMenuItem>Assign To...</DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem className="text-red-500">Delete</DropdownMenuItem> */}
+          <DialogTrigger asChild><DropdownMenuItem onSelect={() => setSelectedApp(row.original)}>View Details</DropdownMenuItem></DialogTrigger>
         </DropdownMenuContent>
       </DropdownMenu>
     )},
-  ], []);
+  ], [])
 
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
-  const [rowSelection, setRowSelection] = React.useState({});
-  const [{ pageIndex, pageSize }, setPagination] = React.useState<PaginationState>({ pageIndex: 0, pageSize: 10 });
-  const [searchTerm, setSearchTerm] = React.useState("");
+  const [sorting, setSorting] = React.useState<SortingState>([])
+  const [{ pageIndex, pageSize }, setPagination] = React.useState<PaginationState>({ pageIndex: 0, pageSize: 10 })
+  const [searchTerm, setSearchTerm] = React.useState("")
   
-  const queryParams = React.useMemo(() => ({
-    page: pageIndex + 1,
-    limit: pageSize,
-    search: searchTerm,
-    sortBy: sorting[0]?.id,
-    sortOrder: sorting[0]?.desc ? 'desc' : 'asc',
-  }), [pageIndex, pageSize, searchTerm, sorting]);
-
   React.useEffect(() => {
-    const debouncedFetch = setTimeout(() => {
-      dispatch(fetchJobApplications(queryParams));
-    }, 300);
-    return () => clearTimeout(debouncedFetch);
-  }, [dispatch, queryParams]);
+    const queryParams = { page: pageIndex + 1, limit: pageSize, search: searchTerm, sortBy: sorting[0]?.id, sortOrder: sorting[0]?.desc ? 'desc' : 'asc' }
+    const debouncedFetch = setTimeout(() => { dispatch(fetchJobApplications(queryParams)) }, 300)
+    return () => clearTimeout(debouncedFetch)
+  }, [dispatch, pageIndex, pageSize, searchTerm, sorting])
+
+  const handleExport = async () => {
+    setIsExporting(true)
+    toast({ description: "Preparing all applications for download..." })
+    try {
+      const response = await apiClient.get("/admin/job-applications/export")
+      exportToExcel(response.data.data, "Job_Applications_Export")
+      toast({ title: "Success!", description: "Your file has started downloading." })
+    } catch (error) {
+      toast({ title: "Export Failed", description: "Could not download the data. Please try again.", variant: "destructive" })
+    } finally {
+      setIsExporting(false)
+    }
+  }
 
   const handleDialogChange = (isOpen: boolean) => {
-    if (!isOpen) {
-        setSelectedApp(null);
-        dispatch(clearDetailedApplication());
-    }
-  };
+    if (!isOpen) { setSelectedApp(null); dispatch(clearDetailedApplication()) }
+  }
 
   const table = useReactTable({
-    data: jobApplications,
-    columns,
-    pageCount: jobPagination.totalPages ?? -1,
-    state: {
-      sorting,
-      columnFilters,
-      columnVisibility,
-      rowSelection,
-      pagination: { pageIndex, pageSize },
-    },
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
-    onPaginationChange: setPagination,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    manualPagination: true,
-    manualSorting: true,
-    manualFiltering: true,
-  });
+    data: jobApplications, columns, pageCount: jobPagination.totalPages ?? -1,
+    state: { sorting, pagination: { pageIndex, pageSize }, rowSelection: {} },
+    onSortingChange: setSorting, onPaginationChange: setPagination,
+    getCoreRowModel: getCoreRowModel(), getSortedRowModel: getSortedRowModel(), getFilteredRowModel: getFilteredRowModel(),
+    manualPagination: true, manualSorting: true, manualFiltering: true,
+  })
 
   return (
     <Dialog onOpenChange={handleDialogChange}>
       <div className="w-full">
         <div className="flex items-center py-4 gap-4">
           <Input placeholder="Filter by applicant name..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="max-w-sm" />
-          <DropdownMenu><DropdownMenuTrigger asChild><Button variant="outline" className="ml-auto">Columns <ChevronDown className="ml-2 h-4 w-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end">{table.getAllColumns().filter((column) => column.getCanHide()).map((column) => (<DropdownMenuCheckboxItem key={column.id} className="capitalize" checked={column.getIsVisible()} onCheckedChange={(value) => column.toggleVisibility(!!value)}>{column.id}</DropdownMenuCheckboxItem>))}</DropdownMenuContent></DropdownMenu>
+          <div className="ml-auto flex items-center gap-2">
+            <Button variant="outline" onClick={handleExport} disabled={isExporting}>
+              {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileDown className="mr-2 h-4 w-4" />}
+              Download All
+            </Button>
+            <DropdownMenu><DropdownMenuTrigger asChild><Button variant="outline">Columns <ChevronDown className="ml-2 h-4 w-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end">{table.getAllColumns().filter((c) => c.getCanHide()).map((c) => (<DropdownMenuCheckboxItem key={c.id} className="capitalize" checked={c.getIsVisible()} onCheckedChange={(v) => c.toggleVisibility(!!v)}>{c.id}</DropdownMenuCheckboxItem>))}</DropdownMenuContent></DropdownMenu>
+          </div>
         </div>
         <div className="rounded-md border bg-card">
           <Table>
-            <TableHeader>{table.getHeaderGroups().map((headerGroup) => (<TableRow key={headerGroup.id}>{headerGroup.headers.map((header) => (<TableHead key={header.id}>{header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}</TableHead>))}</TableRow>))}</TableHeader>
+            <TableHeader>{table.getHeaderGroups().map((hg) => (<TableRow key={hg.id}>{hg.headers.map((h) => (<TableHead key={h.id}>{flexRender(h.column.columnDef.header, h.getContext())}</TableHead>))}</TableRow>))}</TableHeader>
             <TableBody>
               {jobApplicationsStatus === "loading" ? ( Array.from({ length: pageSize }).map((_, i) => (<TableRow key={i}><TableCell colSpan={columns.length}><Skeleton className="h-8 w-full" /></TableCell></TableRow>)) ) : 
-                table.getRowModel().rows?.length ? ( table.getRowModel().rows.map((row) => (<TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>{row.getVisibleCells().map((cell) => (<TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>))}</TableRow>)) ) : 
+                table.getRowModel().rows?.length ? ( table.getRowModel().rows.map((r) => (<TableRow key={r.id}>{r.getVisibleCells().map((c) => (<TableCell key={c.id}>{flexRender(c.column.columnDef.cell, c.getContext())}</TableCell>))}</TableRow>)) ) : 
                 (<TableRow><TableCell colSpan={columns.length} className="h-24 text-center">No results.</TableCell></TableRow>)
               }
             </TableBody>
           </Table>
         </div>
         <div className="flex items-center justify-end space-x-2 py-4">
-          <div className="flex-1 text-sm text-muted-foreground">{Object.keys(rowSelection).length} of {jobPagination.totalDocuments} row(s) selected.</div>
+          <div className="flex-1 text-sm text-muted-foreground">{jobPagination.totalDocuments} total applications.</div>
           <div className="space-x-2"><Button variant="outline" size="sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>Previous</Button><Button variant="outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>Next</Button></div>
         </div>
       </div>
       <DialogContent className="sm:max-w-2xl">
-          <DialogHeader>
-              <DialogTitle>Job Application Details</DialogTitle>
-          </DialogHeader>
-          {selectedApp && <AdminApplicationDetailsView appId={selectedApp._id} type="job" />}
+        <DialogHeader><DialogTitle>Job Application Details</DialogTitle></DialogHeader>
+        {selectedApp && <AdminApplicationDetailsView appId={selectedApp._id as string} type="job" />}
       </DialogContent>
     </Dialog>
-  );
+  )
 }
