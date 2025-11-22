@@ -2,43 +2,54 @@
 
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { ArrowRight } from "lucide-react"
+import { ArrowRight, Sparkles } from "lucide-react"
 import { SectionWrapper, MotionH2, MotionP, MotionDiv, childVariants } from "./SectionWrapper"
 
 export function CtaSection() {
   return (
-    <SectionWrapper className="bg-background pb-20">
-      <div className="relative max-w-5xl mx-auto">
-        <div
-          aria-hidden="true"
-          className="absolute -inset-x-8 -top-20 -bottom-20 bg-primary/10 blur-3xl opacity-50"
-        />
+    <SectionWrapper className="py-8 bg-background">
+      <div className="max-w-4xl mx-auto px-4">
         <MotionDiv
           variants={childVariants}
-          className="relative text-center rounded-2xl bg-gradient-to-br from-background via-primary/5 to-muted/40 p-12 md:p-16 border overflow-hidden transition-all hover:shadow-xl hover:-translate-y-1"
+          className="relative overflow-hidden rounded-3xl border bg-card/50 text-center shadow-2xl shadow-primary/5"
         >
-          <div
-            aria-hidden="true"
-            className="absolute inset-0 bg-[radial-gradient(#0047ab0a_1px,transparent_1px)] [background-size:16px_16px]"
-          />
-          <div className="relative z-10 space-y-8">
-            <div className="space-y-4">
-              <MotionH2 variants={childVariants} className="text-4xl md:text-5xl font-bold text-foreground text-balance">
-                Ready to Transform Your Future?
-              </MotionH2>
-              <MotionP variants={childVariants} className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Join thousands of successful professionals who have achieved their career and financial goals with Athith.
-              </MotionP>
+          <div className="absolute inset-0 -z-10 h-full w-full bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:24px_24px]" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[100px] -z-10" />
+
+          <div className="px-6 py-16 md:px-12 md:py-20 flex flex-col items-center">
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border bg-background/80 backdrop-blur-sm px-3 py-1 text-sm font-medium text-muted-foreground shadow-sm">
+              <Sparkles className="h-3.5 w-3.5 text-primary" />
+              <span>Start your journey</span>
             </div>
-            <MotionDiv variants={childVariants} className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-              <Link href="/job-form">
-                <Button size="lg" className="w-full sm:w-auto transition-transform hover:scale-105 cursor-pointer">
-                  Find Your Dream Job <ArrowRight className="w-5 h-5 ml-2" />
+
+            <MotionH2 
+              variants={childVariants} 
+              className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-foreground text-balance mb-6"
+            >
+              Ready to <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">Transform</span> Your Future?
+            </MotionH2>
+
+            <MotionP 
+              variants={childVariants} 
+              className="max-w-2xl text-lg text-muted-foreground mb-10 leading-relaxed"
+            >
+              Join thousands of professionals who have successfully navigated their career and financial paths with our expert guidance.
+            </MotionP>
+
+            <MotionDiv 
+              variants={childVariants} 
+              className="flex flex-col sm:flex-row w-full sm:w-auto gap-4"
+            >
+              <Link href="/job-form" className="w-full sm:w-auto">
+                <Button size="lg" className="w-full h-12 px-8 text-base group shadow-lg shadow-primary/20">
+                  Find Dream Job
+                  <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Button>
               </Link>
-              <Link href="/loan-form">
-                <Button size="lg" variant="outline" className="w-full sm:w-auto transition-transform hover:scale-105 cursor-pointer">
-                  Get Loan Support <ArrowRight className="w-5 h-5 ml-2" />
+              <Link href="/loan-form" className="w-full sm:w-auto">
+                <Button size="lg" variant="outline" className="w-full h-12 px-8 text-base group bg-background/60 backdrop-blur-sm">
+                  Get Loan Support
+                  <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Button>
               </Link>
             </MotionDiv>

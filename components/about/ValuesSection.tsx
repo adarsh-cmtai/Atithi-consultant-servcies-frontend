@@ -7,60 +7,68 @@ const coreValues = [
   {
     icon: Shield,
     title: "Client-First Integrity",
-    description: "Your success is our primary measure of success. We operate with complete transparency and provide honest, straightforward advice, even when it's difficult. We build lasting relationships based on trust and mutual respect.",
+    description: "Your success is our primary measure. We operate with complete transparency and provide honest advice, building lasting relationships based on trust.",
   },
   {
     icon: Lightbulb,
     title: "Empowerment Through Guidance",
-    description: "We don't just provide answers; we equip you with the knowledge, skills, and confidence to navigate your challenges independently. Our goal is to empower you to make informed decisions for your future.",
+    description: "We don't just provide answers; we equip you with the knowledge and confidence to navigate challenges and make informed decisions for your future.",
   },
   {
     icon: Gem,
     title: "Commitment to Excellence",
-    description: "From the initial consultation to the final outcome, we are dedicated to delivering the highest quality of service. We continuously refine our strategies and stay updated on industry trends to ensure you receive the best possible support.",
+    description: "From initial consultation to final outcome, we are dedicated to delivering the highest quality service, continuously refining our strategies for you.",
   },
   {
     icon: Handshake,
     title: "Collaborative Partnership",
-    description: "We view our clients as partners. We listen to your unique needs, collaborate on strategies, and work alongside you throughout your journey. Your goals become our shared objectives.",
+    description: "We view our clients as partners. We listen to your unique needs, collaborate on strategies, and work alongside you so your goals become our shared objectives.",
   },
 ]
 
 export function ValuesSection() {
   return (
-    <SectionWrapper>
-      <div className="text-center space-y-4 mb-20">
-        <MotionH2 variants={childVariants} className="text-4xl md:text-5xl font-bold text-foreground text-balance">
-          Our Core Values
-        </MotionH2>
-        <MotionP variants={childVariants} className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          The principles that define our character and guide every decision we make.
-        </MotionP>
-      </div>
+    <SectionWrapper className="py-12 bg-background relative overflow-hidden">
+      <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:20px_20px] opacity-30 pointer-events-none" />
+      
+      <div className="max-w-6xl mx-auto px-4 relative z-10">
+        <div className="text-center space-y-4 mb-16">
+          <div className="inline-flex items-center justify-center px-4 py-1.5 mb-2 rounded-full bg-primary/10 text-primary font-medium text-sm">
+            Our Principles
+          </div>
+          <MotionH2 variants={childVariants} className="text-3xl md:text-5xl font-bold text-foreground tracking-tight">
+            Our Core Values
+          </MotionH2>
+          <MotionP variants={childVariants} className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            The guiding principles that define our character and drive every decision we make for your success.
+          </MotionP>
+        </div>
 
-      <div className="space-y-24">
-        {coreValues.map((value, idx) => (
-          <MotionDiv
-            key={idx}
-            variants={childVariants}
-            className="group grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center"
-          >
-            <div className={`space-y-6 ${idx % 2 === 1 ? "lg:order-last" : ""}`}>
-              <div className="inline-flex items-center gap-3 bg-muted px-3 py-1.5 rounded-full">
-                <value.icon className="w-5 h-5 text-primary" />
-                <h3 className="text-xl font-bold text-foreground">{value.title}</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+          {coreValues.map((value, idx) => (
+            <MotionDiv
+              key={idx}
+              variants={childVariants}
+              className="group relative p-8 bg-card border border-border/50 rounded-2xl transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-primary/20 overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 -mr-6 -mt-6 w-24 h-24 bg-primary/5 rounded-full blur-xl group-hover:bg-primary/10 transition-colors" />
+              
+              <div className="relative z-10 flex flex-col items-start">
+                <div className="mb-6 inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300">
+                  <value.icon className="w-6 h-6" />
+                </div>
+                
+                <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors">
+                  {value.title}
+                </h3>
+                
+                <p className="text-muted-foreground leading-relaxed">
+                  {value.description}
+                </p>
               </div>
-              <p className="text-muted-foreground text-lg leading-relaxed">{value.description}</p>
-            </div>
-            
-            <div className="relative h-80 rounded-2xl bg-muted overflow-hidden">
-              <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_70%,transparent_100%)]"></div>
-              <div className="w-full h-full flex items-center justify-center">
-                <value.icon className="w-32 h-32 text-primary/20 group-hover:scale-110 transition-transform duration-500 ease-in-out" />
-              </div>
-            </div>
-          </MotionDiv>
-        ))}
+            </MotionDiv>
+          ))}
+        </div>
       </div>
     </SectionWrapper>
   )

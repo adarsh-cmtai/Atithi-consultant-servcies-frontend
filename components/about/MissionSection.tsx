@@ -57,7 +57,7 @@ export function MissionSection() {
         
         <MotionDiv variants={childVariants} className="relative w-full h-96 lg:h-[500px] rounded-2xl overflow-hidden shadow-lg">
           <Image
-            src="/about.jpg"
+            src="/about1.jpg"
             alt="Professional team meeting"
             fill
             className="object-cover"
