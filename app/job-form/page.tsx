@@ -25,7 +25,7 @@ declare global {
   interface Window { Cashfree: any; }
 }
 
-const APPLICATION_FEE = 450;
+const APPLICATION_FEE = 1;
 const CACHE_KEY = "jobApplicationFormData";
 
 const steps = [
