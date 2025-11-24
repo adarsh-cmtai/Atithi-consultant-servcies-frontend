@@ -26,7 +26,7 @@ declare global {
   interface Window { Cashfree: any; }
 }
 
-const APPLICATION_FEE = 1;
+const APPLICATION_FEE = 450;
 
 const steps = [
   { id: 1, name: "Personal Details", icon: User },
